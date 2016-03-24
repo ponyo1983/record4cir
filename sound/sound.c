@@ -407,7 +407,7 @@ void capture_loop(struct sound*psound) {
 static void playback(struct sound * psound) {
 
 	struct record_manager* record_manager = get_record_manager();
-	int i, sound_num;
+	int sound_num;
 	struct block * pblock;
 	struct block * bkblock;
 

@@ -10,10 +10,10 @@
 #include <stdlib.h>
 
 static char record_id[16] = "PGV5";
-static int volume_playback=84;
-static int volume_capture=84;
+static int volume_playback=85;
+static int volume_capture=85;
 
-static float play_rate=3;
+static int play_rate=20;
 
 static void str_cpy(char *src,char *dst,int length)
 {
