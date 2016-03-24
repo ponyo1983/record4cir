@@ -9,7 +9,7 @@
 
 char to_bcd(char c)
 {
-	return (c/10<<4)|(c%10);
+	return ((c/10)<<4)|(c%10);
 }
 char from_bcd(char bcd)
 {
