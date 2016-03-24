@@ -92,13 +92,13 @@ static void * proc_control(void *args) {
 					{
 						struct tm time;
 						get_time(&time);
+
 						buffer[0] =to_bcd(time.tm_year - 100) ; //year
 						buffer[1] = to_bcd(time.tm_mon + 1);
 						buffer[2] = to_bcd(time.tm_mday);
 						buffer[3] = to_bcd(time.tm_hour);
 						buffer[4] = to_bcd(time.tm_min);
 						buffer[5] = to_bcd(time.tm_sec);
-
 						send_frame(manager, RECORD_ADDRESS, src_addr, 1,
 								(char) 0x91, buffer, 6);
 					}

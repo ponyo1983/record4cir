@@ -33,8 +33,8 @@ static time_t read_rtc(int utc) {
 	struct tm tm;
 	char *oldtz = 0;
 	time_t t = 0;
-	if ((rtc = open("/dev/rtc", O_RDONLY)) < 0) {
-		if ((rtc = open("/dev/misc/rtc", O_RDONLY)) < 0) {
+	if ((rtc = open("/dev/rtc0", O_RDONLY)) < 0) {
+		if ((rtc = open("/dev/misc/rtc0", O_RDONLY)) < 0) {
 			printf("Could not access RTC\n");
 		}
 
@@ -64,8 +64,8 @@ static time_t read_rtc(int utc) {
 static void write_rtc(time_t t, int utc) {
 	int rtc;
 	struct tm tm;
-	if ((rtc = open("/dev/rtc", O_WRONLY)) < 0) {
-		if ((rtc = open("/dev/misc/rtc", O_WRONLY)) < 0) {
+	if ((rtc = open("/dev/rtc0", O_WRONLY)) < 0) {
+		if ((rtc = open("/dev/misc/rtc0", O_WRONLY)) < 0) {
 			printf("Could not access RTC\n");
 		}
 
