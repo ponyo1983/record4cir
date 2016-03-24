@@ -61,23 +61,7 @@ static time_t read_rtc(int utc) {
 	}
 	return t;
 }
-static void write_rtc(time_t t, int utc) {
-	int rtc;
-	struct tm tm;
-	if ((rtc = open("/dev/rtc0", O_WRONLY)) < 0) {
-		if ((rtc = open("/dev/misc/rtc0", O_WRONLY)) < 0) {
-			printf("Could not access RTC\n");
-		}
 
-	}
-	tm = *(utc ? gmtime(&t) : localtime(&t));
-	tm.tm_isdst = 0;
-	if (ioctl(rtc, RTC_SET_TIME, &tm) < 0) {
-		printf("Could not set the RTC time\n");
-	}
-
-	close(rtc);
-}
 
 
 
@@ -89,4 +73,19 @@ void get_time(struct tm *ptm) {
 	bcopy(tm,ptm,sizeof(struct tm));
 }
 
+ void set_time(struct tm tm) {
+	int rtc;
+	if ((rtc = open("/dev/rtc0", O_WRONLY)) < 0) {
+		if ((rtc = open("/dev/misc/rtc0", O_WRONLY)) < 0) {
+			printf("Could not access RTC\n");
+			return;
+		}
 
+	}
+	tm.tm_isdst = 0;
+	if (ioctl(rtc, RTC_SET_TIME, &tm) < 0) {
+		printf("Could not set the RTC time\n");
+	}
+
+	close(rtc);
+}
