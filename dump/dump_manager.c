@@ -28,7 +28,7 @@
 #ifdef __x86_64
 const char NAME_PREFIX[] = "sdb"; //模拟机
 #else
-const char NAME_PREFIX[] = "sda"; //实际ARM开发板
+const char NAME_PREFIX[] = "sd"; //实际ARM开发板
 #endif
 
 const char MOUNT_POINT[] = "/mnt";
@@ -156,7 +156,7 @@ static int mount_usb(struct dump_manager *manager) {
 	return ret;
 }
 
-static void unmount_usb() {
+static void unmount_usb(struct dump_manager *manager) {
 
 	umount(MOUNT_POINT);
 	umount(MOUNT_POINT);
@@ -218,6 +218,10 @@ static int mk_dir(char *dir) {
 		{
 			return -1;
 		}
+	}
+	else
+	{
+		closedir(mydir);
 	}
 	return 0;
 }
@@ -326,7 +330,7 @@ void * dump_proc(void * args) {
 	struct dump_manager *manager = (struct dump_manager*) args;
 	while (1) {
 		wait_usb_plugin(manager);
-		unmount_usb();
+		unmount_usb(manager);
 		if (mount_usb(manager) == 0) {
 
 			change_led_mode(LED_DUMP);
@@ -338,7 +342,7 @@ void * dump_proc(void * args) {
 				dump_wave(manager);
 				printf("dump OK!\n");
 			}
-			unmount_usb();
+			unmount_usb(manager);
 
 			change_led_mode(LED_DUMP_FINISHED);
 			wait_usb_plugout(manager);
