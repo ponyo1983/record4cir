@@ -70,7 +70,7 @@ void get_time(struct tm *ptm) {
 	bcopy(tm, ptm, sizeof(struct tm));
 }
 
-void set_time(struct tm tm) {
+void set_time(struct tm* tm) {
 	int rtc;
 	if ((rtc = open("/dev/rtc0", O_WRONLY)) < 0) {
 		if ((rtc = open("/dev/misc/rtc0", O_WRONLY)) < 0) {
@@ -79,20 +79,20 @@ void set_time(struct tm tm) {
 		}
 
 	}
-	tm.tm_isdst = 0;
-	if (ioctl(rtc, RTC_SET_TIME, &tm) < 0) {
+	tm->tm_isdst = 0;
+	if (ioctl(rtc, RTC_SET_TIME, tm) < 0) {
 		printf("Could not set the RTC time\n");
 	}
 
 	close(rtc);
 }
 
-void set_time2(struct tm t_tm) {
+void set_time2(struct tm* t_tm) {
 
 	struct timeval t_timeval;
 	time_t t_timet;
 
-	t_timet = mktime(&t_tm);
+	t_timet = mktime(t_tm);
 
 	t_timeval.tv_sec = t_timet;
 	t_timeval.tv_usec = 0;
