@@ -9,7 +9,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-
+#include <sys/stat.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <sys/mount.h>
 
@@ -163,10 +164,11 @@ static void unmount_usb() {
 
 static int exe_update(struct dump_manager * manager) {
 	char file_update[50];
-	int status;
+
 	sprintf(file_update, "%s/update", MOUNT_POINT);
-	if(access(file_update, F_OK|X_OK)!=0) return -1;
-	status=system(file_update);
+	if (access(file_update, F_OK | X_OK) != 0)
+		return -1;
+	system(file_update);
 	return 0;
 }
 
@@ -207,6 +209,19 @@ static int get_config_info(struct dump_manager *manager) {
 	return 0;
 }
 
+
+static int mk_dir(char *dir) {
+	DIR *mydir = NULL;
+	if ((mydir = opendir(dir)) == NULL) {
+		int ret = mkdir(dir,0755);
+		if (ret != 0)
+		{
+			return -1;
+		}
+	}
+	return 0;
+}
+
 static void dump_data(struct dump_manager *manager, int section) {
 	char buffer[512];
 	FILE * file = NULL;
@@ -218,17 +233,32 @@ static void dump_data(struct dump_manager *manager, int section) {
 	struct block_filter * filter = manager->manager.fliters;
 	if (section < 0 || section > 2)
 		return;
+	sprintf(buffer, "%s/%s/", MOUNT_POINT, manager->ID);
 
-	switch (section) {
-	case 0:
-		sprintf(buffer, "%s/%s-Menu.dat", MOUNT_POINT, manager->ID);
-		break;
-	case 1:
-		sprintf(buffer, "%s/%s-Serial.dat", MOUNT_POINT, manager->ID);
-		break;
-	case 2:
-		sprintf(buffer, "%s/%s-Wave.dat", MOUNT_POINT, manager->ID);
-		break;
+	if (mk_dir(buffer) == 0) {
+		switch (section) {
+		case 0:
+			sprintf(buffer, "%s/%s/Menu.bin", MOUNT_POINT, manager->ID);
+			break;
+		case 1:
+			sprintf(buffer, "%s/%s/Data.bin", MOUNT_POINT, manager->ID);
+			break;
+		case 2:
+			sprintf(buffer, "%s/%s/Wave.bin", MOUNT_POINT, manager->ID);
+			break;
+		}
+	} else {
+		switch (section) {
+		case 0:
+			sprintf(buffer, "%s/Menu.bin", MOUNT_POINT);
+			break;
+		case 1:
+			sprintf(buffer, "%s/Data.bin", MOUNT_POINT);
+			break;
+		case 2:
+			sprintf(buffer, "%s/Wave.bin", MOUNT_POINT);
+			break;
+		}
 	}
 
 	for (i = 0; i < 3; i++) { //尝试3次
@@ -308,11 +338,10 @@ void * dump_proc(void * args) {
 				dump_wave(manager);
 				printf("dump OK!\n");
 			}
-				unmount_usb();
+			unmount_usb();
 
-
-				change_led_mode(LED_DUMP_FINISHED);
-				wait_usb_plugout(manager);
+			change_led_mode(LED_DUMP_FINISHED);
+			wait_usb_plugout(manager);
 
 			change_led_mode(LED_NORMAL);
 		}
