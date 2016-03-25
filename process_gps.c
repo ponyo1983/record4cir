@@ -66,33 +66,35 @@ static void * proc_gps(void *args) {
 					if (firstGPS) {
 
 						set_time(tGPS);
+						set_time2(tGPS);
 						firstGPS = 0;
-					}
-					else
-					{
+					} else {
 						struct tm tSys;
 						get_time(&tSys);
-						if((tGPS.tm_year!=tSys.tm_year)|| (tGPS.tm_mon!=tSys.tm_mon) ||(tGPS.tm_mday!=tSys.tm_mday))
-						{
+						if ((tGPS.tm_year != tSys.tm_year)
+								|| (tGPS.tm_mon != tSys.tm_mon)
+								|| (tGPS.tm_mday != tSys.tm_mday)) {
 							set_time(tGPS);
-						}
-						else
-						{
-							int s1=hour*60*60+minute*60+second;
-							int s2=tSys.tm_hour*60*60+tSys.tm_min*60+tSys.tm_sec;
-							int diff=s1<s2?(s2-s1):(s1-s2);
-							if(diff>30)
-							{
+							set_time2(tGPS);
+						} else {
+							int s1 = hour * 60 * 60 + minute * 60 + second;
+							int s2 = tSys.tm_hour * 60 * 60 + tSys.tm_min * 60
+									+ tSys.tm_sec;
+							int diff = s1 < s2 ? (s2 - s1) : (s1 - s2);
+							if (diff > 30) {
 								set_time(tGPS);
+								set_time2(tGPS);
 							}
 						}
 					}
 
 				}
 
-			} else if (gpsSate == (char) 0x56)
+			} else if (gpsSate == (char) 0x56) {
 
-				put_block(pblock, BLOCK_EMPTY);
+			}
+
+			put_block(pblock, BLOCK_EMPTY);
 
 		} else { //超时
 

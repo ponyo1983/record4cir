@@ -12,4 +12,5 @@
 
 void get_time(struct tm *ptm) ;
 void set_time(struct tm tm);
+void set_time2(struct tm tm);
 #endif /* HWCLOCK_H_ */

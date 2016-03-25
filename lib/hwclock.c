@@ -62,18 +62,15 @@ static time_t read_rtc(int utc) {
 	return t;
 }
 
-
-
-
 void get_time(struct tm *ptm) {
 	struct tm *tm;
 	time_t t;
 	t = read_rtc(1);
 	tm = localtime(&t); /* Sets 'tzname[]' */
-	bcopy(tm,ptm,sizeof(struct tm));
+	bcopy(tm, ptm, sizeof(struct tm));
 }
 
- void set_time(struct tm tm) {
+void set_time(struct tm tm) {
 	int rtc;
 	if ((rtc = open("/dev/rtc0", O_WRONLY)) < 0) {
 		if ((rtc = open("/dev/misc/rtc0", O_WRONLY)) < 0) {
@@ -88,4 +85,17 @@ void get_time(struct tm *ptm) {
 	}
 
 	close(rtc);
+}
+
+void set_time2(struct tm t_tm) {
+
+	struct timeval t_timeval;
+	time_t t_timet;
+
+	t_timet = mktime(&t_tm);
+
+	t_timeval.tv_sec = t_timet;
+	t_timeval.tv_usec = 0;
+
+	int rec = settimeofday(&t_timeval, NULL);
 }
