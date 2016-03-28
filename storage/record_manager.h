@@ -17,7 +17,7 @@
 
 #include "../lib/block_filter.h"
 
-#define SERIAL_BUFFER_SIZE	(1024)
+#define SERIAL_BUFFER_SIZE	(4*1024)
 
 struct record_manager {
 	struct block_manager manager;
