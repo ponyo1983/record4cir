@@ -26,8 +26,8 @@ struct record_dic {
 		__int64_t total;
 		__int64_t next_off; //下一个写入的偏移地址
 		__int64_t size; //保存的数据的长度
-		__int64_t last2_pos;
-		__int64_t last1_pos;
+		__int64_t last_next_off;
+		__int64_t last_size;
 	} sections[3];
 	__int64_t last_wav[5]; //最近5条的录音记录
 	char reserved[512 - 16 * 4 - 16 * 6 * 3 - 40 - 2];
