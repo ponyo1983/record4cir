@@ -19,6 +19,7 @@ struct dump_manager
 	char device_name[50];
 	int device_exit_time;
 	int acordding_time;
+	int copy_all;
 	int begin_time; //格式 yy[2]mm[1]dd[0]
 	int end_time;
 

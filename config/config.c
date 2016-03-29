@@ -54,6 +54,8 @@ void load_config() {
 	}
 }
 
+
+
 char * get_id() {
 	return record_id;
 }

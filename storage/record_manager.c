@@ -325,8 +325,11 @@ static void flush_data(struct record_manager *manager, int section,
 		}
 		dic->sections[section].size = dic->sections[section].size + size;
 
-		dic->sections[section].last_next_off=(dic->sections[section].last_next_off+size)%dic->sections[section].total;
-		dic->sections[section].last_size = dic->sections[section].last_size + size;
+		dic->sections[section].last_next_off =
+				(dic->sections[section].last_next_off + size)
+						% dic->sections[section].total;
+		dic->sections[section].last_size = dic->sections[section].last_size
+				+ size;
 	} else {
 		//first create a gap eare
 
@@ -349,7 +352,8 @@ static void flush_wave_data(struct record_manager *manager,
 
 static void flush_serial_data(struct record_manager *manager) {
 
-	flush_data(manager, 1, (u_char*)manager->serial_buffer, manager->serial_length);
+	flush_data(manager, 1, (u_char*) manager->serial_buffer,
+			manager->serial_length);
 
 }
 
@@ -387,62 +391,63 @@ static void dump_data(struct record_manager *manager, struct record * record,
 	static char dump_buffer[DUMP_SIZE]; //
 	int i;
 	int size, offset, size1, rd_size;
+	__int64_t total;
 	struct dump_manager *pdump_manager = NULL;
 	pdump_manager = (struct dump_manager*) record->data;
 	if (section == 1) {
 		flush_serial_data(manager);
 	}
-	//printf("dum start\n");
 	send_dump(pdump_manager, section * 3, 0, dump_buffer, 16); //应答
 
 	usleep(100000);
-
-	if (pdump_manager->acordding_time) //根据日期存储
-	{
-
+	total=(manager->dics[0].sections[section].total);
+	if (pdump_manager->copy_all) {
+		size = manager->dics[0].sections[section].size;
+		offset=manager->dics[0].sections[section].next_off;
+		offset = (offset+ total- size)	% total;
 	} else {
 
 		size = manager->dics[0].sections[section].last_size;
-			offset = (manager->dics[0].sections[section].last_next_off
-					+ manager->dics[0].sections[section].total
-					- manager->dics[0].sections[section].last_size)
-					% (manager->dics[0].sections[section].total);
+		offset=manager->dics[0].sections[section].last_next_off;
+		offset = (offset+ total- size)	% total;
 
-			i = 0;
-			size1 = (size + offset) % (manager->dics[0].sections[section].total);
-			if (size1 > 0) {
-				fseek(manager->file,offset + (manager->dics[0].sections[section].offset), SEEK_SET);
-
-				while (size1 > 0) {
-					rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
-					fread(dump_buffer, rd_size, 1, manager->file);
-					send_dump(pdump_manager, section * 3 + 1, i, dump_buffer, rd_size);
-					size1 -= rd_size;
-					i++;
-
-				}
-			}
-			size1=size-size1;
-			if (size1 > 0) {
-					fseek(manager->file,(manager->dics[0].sections[section].offset), SEEK_SET);
-
-					while (size1 > 0) {
-						rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
-						fread(dump_buffer, rd_size, 1, manager->file);
-						send_dump(pdump_manager, section * 3 + 1, i, dump_buffer, rd_size);
-						size1 -= rd_size;
-						i++;
-					}
-				}
-
-			send_dump(pdump_manager, section * 3 + 2, 0, dump_buffer, 1);
-
-			manager->dics[0].sections[section].last_size=0;
-
-			flush_serial_data(manager);
 	}
 
+	i = 0;
+	size1 = (size + offset) >= total?(total-offset):size;
+	if (size1 > 0) {
+		fseek(manager->file,
+				offset + (manager->dics[0].sections[section].offset), SEEK_SET);
 
+		while (size1 > 0) {
+			rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
+			fread(dump_buffer, rd_size, 1, manager->file);
+			send_dump(pdump_manager, section * 3 + 1, i, dump_buffer, rd_size);
+			size1 -= rd_size;
+			i++;
+
+		}
+	}
+	size1 = size - size1;
+	if (size1 > 0) {
+		fseek(manager->file, (manager->dics[0].sections[section].offset),
+		SEEK_SET);
+
+		while (size1 > 0) {
+			rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
+			fread(dump_buffer, rd_size, 1, manager->file);
+			send_dump(pdump_manager, section * 3 + 1, i, dump_buffer, rd_size);
+			size1 -= rd_size;
+			i++;
+		}
+	}
+
+	send_dump(pdump_manager, section * 3 + 2, 0, dump_buffer, 1);
+	if (pdump_manager->copy_all == 0) {
+		manager->dics[0].sections[section].last_size = 0;
+
+		flush_serial_data(manager);
+	}
 }
 
 static void dump_status_data(struct record_manager *manager,

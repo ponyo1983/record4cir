@@ -37,7 +37,7 @@ const char MOUNT_POINT[] = "/mnt";
 
 const char KEY_BEGINTIME[] = "BeginTime=";
 const char KEY_ENDTIME[] = "EndTime=";
-
+const char COPY_ALL[] = "CopyAll=y";
 static struct dump_manager* gpdump_manager = NULL;
 
 static void * get_extern_device() {
@@ -181,6 +181,7 @@ static int get_config_info(struct dump_manager *manager) {
 
 	int year, month, day;
 	manager->acordding_time = 0;
+	manager->copy_all=0;
 	manager->begin_time = -1;
 	manager->end_time = -1;
 	sprintf(file_name, "%s/config.ini", MOUNT_POINT);
@@ -202,6 +203,10 @@ static int get_config_info(struct dump_manager *manager) {
 				if (year >= 2000 && month > 0 && day > 0) {
 					manager->end_time = ((year - 2000) << 16) | (month) | (day);
 				}
+			}
+			else if(strncmp(buffer, COPY_ALL, strlen(COPY_ALL)) == 0)
+			{
+				manager->copy_all=1;
 			}
 
 		}
