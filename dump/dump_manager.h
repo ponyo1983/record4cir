@@ -22,7 +22,7 @@ struct dump_manager
 	int begin_time; //格式 yy[2]mm[1]dd[0]
 	int end_time;
 
-
+	struct tm time_export;
 
 	pthread_t thread_dump;
 

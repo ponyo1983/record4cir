@@ -25,6 +25,8 @@
 #include "../led/led.h"
 #include "../config/config.h"
 
+#include "../lib/hwclock.h"
+
 #ifdef __x86_64
 const char NAME_PREFIX[] = "sdb"; //模拟机
 #else
@@ -209,25 +211,22 @@ static int get_config_info(struct dump_manager *manager) {
 	return 0;
 }
 
-
 static int mk_dir(char *dir) {
 	DIR *mydir = NULL;
 	if ((mydir = opendir(dir)) == NULL) {
-		int ret = mkdir(dir,0755);
-		if (ret != 0)
-		{
+		int ret = mkdir(dir, 0755);
+		if (ret != 0) {
 			return -1;
 		}
-	}
-	else
-	{
+	} else {
 		closedir(mydir);
 	}
 	return 0;
 }
 
 static void dump_data(struct dump_manager *manager, int section) {
-	char buffer[512];
+	char buffer[256];
+	char buffer1[256];
 	FILE * file = NULL;
 	struct dump* pdump = NULL;
 	struct block * pblock = NULL;
@@ -240,17 +239,36 @@ static void dump_data(struct dump_manager *manager, int section) {
 	sprintf(buffer, "%s/%s/", MOUNT_POINT, manager->ID);
 
 	if (mk_dir(buffer) == 0) {
-		switch (section) {
-		case 0:
-			sprintf(buffer, "%s/%s/Menu.bin", MOUNT_POINT, manager->ID);
-			break;
-		case 1:
-			sprintf(buffer, "%s/%s/Data.bin", MOUNT_POINT, manager->ID);
-			break;
-		case 2:
-			sprintf(buffer, "%s/%s/Wave.bin", MOUNT_POINT, manager->ID);
-			break;
+		struct tm *tNow;
+		tNow=&(manager->time_export);
+		sprintf(buffer1, "%s/%4d-%2d-%2d %2d,%2d,%2d/",buffer, tNow->tm_year+1900, tNow->tm_mon+1, tNow->tm_mday, tNow->tm_hour, tNow->tm_min, tNow->tm_sec);
+		if (mk_dir(buffer1) == 0) {
+
+			switch (section) {
+						case 0:
+							sprintf(buffer, "%s/Menu.bin", buffer1);
+							break;
+						case 1:
+							sprintf(buffer, "%s/Data.bin", buffer1);
+							break;
+						case 2:
+							sprintf(buffer, "%s/Wave.bin", buffer1);
+							break;
+						}
+		} else {
+			switch (section) {
+			case 0:
+				sprintf(buffer, "%s/%s/Menu.bin", MOUNT_POINT, manager->ID);
+				break;
+			case 1:
+				sprintf(buffer, "%s/%s/Data.bin", MOUNT_POINT, manager->ID);
+				break;
+			case 2:
+				sprintf(buffer, "%s/%s/Wave.bin", MOUNT_POINT, manager->ID);
+				break;
+			}
 		}
+
 	} else {
 		switch (section) {
 		case 0:
@@ -341,6 +359,7 @@ void * dump_proc(void * args) {
 			if (exe_update(manager) != 0) {
 				get_config_info(manager);
 
+				get_time(&(manager->time_export));
 				dump_status(manager);
 				dump_serial(manager);
 				dump_wave(manager);
@@ -357,8 +376,6 @@ void * dump_proc(void * args) {
 
 	return NULL;
 }
-
-
 
 struct dump_manager* get_dump_manager() {
 	if (gpdump_manager == NULL) {
