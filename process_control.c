@@ -20,8 +20,11 @@
 #include "lib/block_filter.h"
 #include "lib/block_manager.h"
 
-#include "./led/led.h"
-#include "./sound/sound.h"
+#include "led/led.h"
+#include "sound/sound.h"
+
+#include "config/config.h"
+#include "config/cab_type.h"
 
 #include "global.h"
 
@@ -38,7 +41,8 @@ static void * proc_control(void *args) {
 
 	struct frame *pframe = NULL;
 	struct block * pblock=NULL;
-	char buffer[32];
+	char buffer[64];
+	int length;
 	char dest_addr = 0;
 	char src_addr = 0;
 	char operation = 0;
@@ -57,9 +61,30 @@ static void * proc_control(void *args) {
 			dest_addr = destination_of_frame(pframe);
 			src_addr = pframe->data[4];
 			cmd = command_of_frame(pframe);
+			operation = operation_of_frame(pframe);
+
+			if((src_addr==MASTER_ADDRESS) && (dest_addr==RADIO_450M_ADDRESS))
+			{
+				if((operation==0x03) && (cmd==0x20)) //向450M发送机车号
+				{
+					char * cab_id=get_id();
+					int i;
+					get_frame_real_data(pframe,buffer,&length);
+
+					buffer[8]=0;
+					tmp=buffer[3];
+					buffer[3]=0;
+					int cab_type=atoi(buffer);
+
+					buffer[3]=tmp;
+
+					sprintf(cab_id,"%s-%s",get_cab_code(cab_type),buffer+3);
+
+				}
+			}
 
 			if (dest_addr == RECORD_ADDRESS) {
-				operation = operation_of_frame(pframe);
+
 				switch (operation) {
 				case 1: //维护信息
 					// echo off

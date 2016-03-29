@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-static char record_id[16] = "PGV5";
+static char record_id[32] = "PGV5";
 static int volume_playback=85;
 static int volume_capture=85;
 

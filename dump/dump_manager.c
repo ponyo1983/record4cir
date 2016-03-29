@@ -274,7 +274,6 @@ static void dump_data(struct dump_manager *manager, int section) {
 			if (pdump->type == section * 3) {
 				ack = 1;
 				put_block(pblock, BLOCK_EMPTY);
-				printf("ack OK!\n");
 				break;
 			} else {
 				printf("ack type%d!\n", (char) pdump->type);
@@ -325,6 +324,10 @@ static void dump_wave(struct dump_manager *manager) {
 	dump_data(manager, 2);
 }
 
+static void get_record_id(struct dump_manager *manager) {
+	char *id = get_id();
+	memcpy(manager->ID, id, 32);
+}
 void * dump_proc(void * args) {
 
 	struct dump_manager *manager = (struct dump_manager*) args;
@@ -333,6 +336,7 @@ void * dump_proc(void * args) {
 		unmount_usb(manager);
 		if (mount_usb(manager) == 0) {
 
+			get_record_id(manager);
 			change_led_mode(LED_DUMP);
 			if (exe_update(manager) != 0) {
 				get_config_info(manager);
@@ -340,7 +344,6 @@ void * dump_proc(void * args) {
 				dump_status(manager);
 				dump_serial(manager);
 				dump_wave(manager);
-				printf("dump OK!\n");
 			}
 			unmount_usb(manager);
 
@@ -355,10 +358,7 @@ void * dump_proc(void * args) {
 	return NULL;
 }
 
-static void get_record_id(struct dump_manager *manager) {
-	char *id = get_id();
-	memcpy(manager->ID, id, 16);
-}
+
 
 struct dump_manager* get_dump_manager() {
 	if (gpdump_manager == NULL) {

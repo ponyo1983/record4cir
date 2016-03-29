@@ -21,4 +21,5 @@ struct frame
 char destination_of_frame(struct frame * pframe);
 char operation_of_frame(struct frame * pframe);
 char command_of_frame(struct frame * pframe);
+void get_frame_real_data(struct frame * pframe,char* buffer,int * length);
 #endif /* FRAME_H_ */
