@@ -182,8 +182,8 @@ static int get_config_info(struct dump_manager *manager) {
 	int year, month, day;
 	manager->acordding_time = 0;
 	manager->copy_all=0;
-	manager->begin_time = -1;
-	manager->end_time = -1;
+	manager->begin_time = 0;
+	manager->end_time = (99<<16)|(12<<8)|(31); //2099-12-31
 	sprintf(file_name, "%s/config.ini", MOUNT_POINT);
 	file = fopen(file_name, "r");
 	if (file != NULL) {
@@ -195,13 +195,12 @@ static int get_config_info(struct dump_manager *manager) {
 			if (strncmp(buffer, KEY_BEGINTIME, strlen(KEY_BEGINTIME)) == 0) { //开始时间
 				sscanf(buffer, "BeginTime=%d-%d-%d", &year, &month, &day);
 				if (year >= 2000 && month > 0 && day > 0) {
-					manager->begin_time = ((year - 2000) << 16) | (month)
-							| (day);
+					manager->begin_time = ((year - 2000) << 16) | (month<<8) | (day);
 				}
 			} else if (strncmp(buffer, KEY_ENDTIME, strlen(KEY_ENDTIME)) == 0) { //结束时间
 				sscanf(buffer, "EndTime=%d-%d-%d", &year, &month, &day);
 				if (year >= 2000 && month > 0 && day > 0) {
-					manager->end_time = ((year - 2000) << 16) | (month) | (day);
+					manager->end_time = ((year - 2000) << 16) | (month<<8) | (day);
 				}
 			}
 			else if(strncmp(buffer, COPY_ALL, strlen(COPY_ALL)) == 0)

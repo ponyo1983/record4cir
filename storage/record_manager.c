@@ -29,8 +29,7 @@
 #include "../sound/g726.h"
 
 #define PARTITION_NAME	("/dev/mmcblk0p3")
-
-#define GAP_SIZE	(256*1024) //必须大于RECORD_DATA_SIZE
+#define DATE_ITEM_SIZE	(16)
 
 const char SECTION_TAG[][3] = { "STS", "SER", "WAV" };
 static struct record_manager* gpmanager = NULL;
@@ -164,7 +163,6 @@ void flush_all_data(struct record_manager * manager) {
 		precord->header.tag[1] = 'L';
 		precord->header.tag[2] = 'S';
 
-
 		put_block(pblock, BLOCK_FULL);
 
 	}
@@ -265,9 +263,11 @@ static void flush_data(struct record_manager *manager, int section,
 	size = (size + (align_size - 1)) / align_size * align_size;
 
 	if (manager->dics[0].sections[section].date_size > 0) {
-		date_pos = (manager->dics[0].sections[section].date_next_off
-				+ manager->dics[0].sections[section].date_total - 8)
-				% (manager->dics[0].sections[section].date_total);
+		date_pos =
+				(manager->dics[0].sections[section].date_next_off
+						+ manager->dics[0].sections[section].date_total
+						- DATE_ITEM_SIZE)
+						% (manager->dics[0].sections[section].date_total);
 		cur_date = manager->date_tbl[section][date_pos / 4];
 	}
 	while (index < size) {
@@ -280,12 +280,11 @@ static void flush_data(struct record_manager *manager, int section,
 			break;
 		}
 
-		date_val = (record->header.year) | ((record->header.month) << 8)
-				| ((record->header.day) << 16);
+		date_val = ((record->header.year) << 16) | ((record->header.month) << 8)
+				| (record->header.day);
 		record_size = (record->header.serial_len + 16 + (align_size - 1))
 				/ align_size * align_size;
-		if (section == 2) //波形文件数据长度为4个字节
-				{
+		if (section == 2) { //波形文件数据长度为4个字节
 			record_size = (record->header.wave_size + 16 + (align_size - 1))
 					/ align_size * align_size;
 		}
@@ -294,17 +293,27 @@ static void flush_data(struct record_manager *manager, int section,
 			date_changed = 1;
 
 			date_pos = manager->dics[0].sections[section].date_next_off;
-			manager->date_tbl[section][date_pos / 4] = date_val;
-			manager->date_tbl[section][date_pos / 4 + 1] =
+			manager->date_tbl[section][date_pos / 4] = date_val; //日期
+			manager->date_tbl[section][date_pos / 4 + 1] = record_size; //长度
+			manager->date_tbl[section][date_pos / 4 + 2] =
 					(manager->dics[0].sections[section].next_off + index)
 							% (manager->dics[0].sections[section].total); //偏移量
+
 			manager->dics[0].sections[section].date_next_off =
-					(manager->dics[0].sections[section].date_next_off + 8)
+					(manager->dics[0].sections[section].date_next_off
+							+ DATE_ITEM_SIZE)
 							% (manager->dics[0].sections[section].date_total);
 			manager->dics[0].sections[section].date_size =
-					(manager->dics[0].sections[section].date_size + 8)
-							% (manager->dics[0].sections[section].date_total);
+					(manager->dics[0].sections[section].date_size
+							+ DATE_ITEM_SIZE);
 
+			if (manager->dics[0].sections[section].date_size
+					> manager->dics[0].sections[section].date_total) {
+				manager->dics[0].sections[section].date_size =
+						manager->dics[0].sections[section].date_total;
+			}
+		} else {
+			manager->date_tbl[section][date_pos / 4 + 1] += record_size; //长度
 		}
 		cur_date = date_val;
 		index += record_size;
@@ -324,35 +333,27 @@ static void flush_data(struct record_manager *manager, int section,
 			- dic->sections[section].next_off;
 	__int64_t size1 = size < blank_size ? size : blank_size;
 	__int64_t size2 = size - size1;
-	if (dic->sections[section].total - dic->sections[section].size > GAP_SIZE) {
 
-		if (size1 > 0) {
-			fseek(manager->file,
-					dic->sections[section].offset
-							+ dic->sections[section].next_off,
-					SEEK_SET);
-			fwrite(data_buffer, 1, size1, manager->file);
-		}
-		if (size2 > 0) {
-			fseek(manager->file, 0,
-			SEEK_SET);
-			fwrite(data_buffer + size1, 1, size2, manager->file);
-			dic->sections[section].next_off = size2;
-		} else {
-			dic->sections[section].next_off = dic->sections[section].next_off
-					+ size;
-		}
-		dic->sections[section].size = dic->sections[section].size + size;
-
-		dic->sections[section].last_next_off =
-				(dic->sections[section].last_next_off + size)
-						% dic->sections[section].total;
-		dic->sections[section].last_size = dic->sections[section].last_size
-				+ size;
-	} else {
-		//first create a gap eare
-
+	if (size1 > 0) {
+		fseek(manager->file,
+				dic->sections[section].offset + dic->sections[section].next_off,
+				SEEK_SET);
+		fwrite(data_buffer, 1, size1, manager->file);
 	}
+	if (size2 > 0) {
+		fseek(manager->file, 0, SEEK_SET);
+		fwrite(data_buffer + size1, 1, size2, manager->file);
+		dic->sections[section].next_off = size2;
+	} else {
+		dic->sections[section].next_off = dic->sections[section].next_off
+				+ size;
+	}
+	dic->sections[section].size = dic->sections[section].size + size;
+
+	dic->sections[section].last_next_off = (dic->sections[section].last_next_off
+			+ size) % dic->sections[section].total;
+	dic->sections[section].last_size = dic->sections[section].last_size + size;
+
 	if (section == 1) {
 		manager->serial_length = 0;
 	}
@@ -408,9 +409,14 @@ static void process_serial_data(struct record_manager *manager,
 static void dump_data(struct record_manager *manager, struct record * record,
 		int section) {
 	static char dump_buffer[DUMP_SIZE]; //
-	int i;
+	int i, j;
 	int size, offset, size1, rd_size;
 	__int64_t total;
+	int size_list[32];
+	int offset_list[32];
+
+	int list_cnt = 0;
+
 	struct dump_manager *pdump_manager = NULL;
 	pdump_manager = (struct dump_manager*) record->data;
 	if (section == 1) {
@@ -420,44 +426,88 @@ static void dump_data(struct record_manager *manager, struct record * record,
 
 	usleep(100000);
 	total = (manager->dics[0].sections[section].total);
-	if (pdump_manager->copy_all) {
+
+	if (pdump_manager->copy_all) { //全拷贝
 		size = manager->dics[0].sections[section].size;
 		offset = manager->dics[0].sections[section].next_off;
 		offset = (offset + total - size) % total;
-	} else {
+		size_list[0] = size;
+		offset_list[0] = offset;
+		list_cnt = 1;
+	} else if (pdump_manager->acordding_time) { //根据时间列表
 
+		int data_size = manager->dics[0].sections[section].date_size;
+		int date_pos;
+		int cur_date;
+		i = 0;
+		while (data_size > 0) {
+			date_pos = (manager->dics[0].sections[section].date_next_off
+					+ manager->dics[0].sections[section].date_total-data_size)
+					% (manager->dics[0].sections[section].date_total);
+			cur_date = manager->date_tbl[section][date_pos / 4];
+			printf("date-----%x-%x-%x\n\r", cur_date, pdump_manager->begin_time,
+					pdump_manager->end_time);
+			if ((cur_date >= pdump_manager->begin_time)
+					&& (cur_date <= pdump_manager->end_time)) {
+				size = manager->date_tbl[section][date_pos / 4 + 1];
+				offset = manager->date_tbl[section][date_pos / 4 + 2];
+
+
+				size_list[i] = size;
+				offset_list[i] = offset;
+				list_cnt++;
+				i++;
+				if (i >= 32)
+					break;
+			}
+
+			data_size -= DATE_ITEM_SIZE;
+		}
+
+	} else { //最近拷贝
 		size = manager->dics[0].sections[section].last_size;
 		offset = manager->dics[0].sections[section].last_next_off;
 		offset = (offset + total - size) % total;
 
+		size_list[0] = size;
+		offset_list[0] = offset;
+		list_cnt = 1;
 	}
 
 	i = 0;
-	size1 = (size + offset) >= total ? (total - offset) : size;
-	if (size1 > 0) {
-		fseek(manager->file,
-				offset + (manager->dics[0].sections[section].offset), SEEK_SET);
+	for (j = 0; j < list_cnt; j++) {
+		size = size_list[j];
+		offset = offset_list[j];
+		size1 = (size + offset) >= total ? (total - offset) : size;
+		if (size1 > 0) {
+			fseek(manager->file,
+					offset + (manager->dics[0].sections[section].offset),
+					SEEK_SET);
 
-		while (size1 > 0) {
-			rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
-			fread(dump_buffer, rd_size, 1, manager->file);
-			send_dump(pdump_manager, section * 3 + 1, i, dump_buffer, rd_size);
-			size1 -= rd_size;
-			i++;
+			while (size1 > 0) {
+				rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
+				fread(dump_buffer, rd_size, 1, manager->file);
+				send_dump(pdump_manager, section * 3 + 1, i, dump_buffer,
+						rd_size);
+				size1 -= rd_size;
+				i++;
 
+			}
 		}
-	}
-	size1 = size - size1;
-	if (size1 > 0) {
-		fseek(manager->file, (manager->dics[0].sections[section].offset),
-		SEEK_SET);
+		size1 = (size + offset) >= total ? (total - offset) : size;
+		size1 = size - size1;
+		if (size1 > 0) {
+			fseek(manager->file, (manager->dics[0].sections[section].offset),
+			SEEK_SET);
 
-		while (size1 > 0) {
-			rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
-			fread(dump_buffer, rd_size, 1, manager->file);
-			send_dump(pdump_manager, section * 3 + 1, i, dump_buffer, rd_size);
-			size1 -= rd_size;
-			i++;
+			while (size1 > 0) {
+				rd_size = size1 > DUMP_SIZE ? DUMP_SIZE : size1;
+				fread(dump_buffer, rd_size, 1, manager->file);
+				send_dump(pdump_manager, section * 3 + 1, i, dump_buffer,
+						rd_size);
+				size1 -= rd_size;
+				i++;
+			}
 		}
 	}
 
