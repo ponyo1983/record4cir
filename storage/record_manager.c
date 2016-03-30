@@ -151,6 +151,25 @@ void store_wave_data(struct record_manager * manager, struct block *wave_block) 
 	}
 }
 
+void flush_all_data(struct record_manager * manager) {
+	struct record * precord;
+	struct block_filter * filter = manager->manager.fliters;
+	if (filter == NULL)
+		return;
+	struct block *pblock = get_block(filter, 0, BLOCK_EMPTY);
+	if (pblock != NULL) {
+		precord = (struct record*) pblock->data;
+		precord->header.type = (char) RECORD_FLUSH_DATA;
+		precord->header.tag[0] = 'F';
+		precord->header.tag[1] = 'L';
+		precord->header.tag[2] = 'S';
+
+
+		put_block(pblock, BLOCK_FULL);
+
+	}
+}
+
 void store_serial_data(struct record_manager * manager, char *data, int length) {
 	struct timeval tv;
 	struct tm* ptm;
@@ -400,21 +419,21 @@ static void dump_data(struct record_manager *manager, struct record * record,
 	send_dump(pdump_manager, section * 3, 0, dump_buffer, 16); //应答
 
 	usleep(100000);
-	total=(manager->dics[0].sections[section].total);
+	total = (manager->dics[0].sections[section].total);
 	if (pdump_manager->copy_all) {
 		size = manager->dics[0].sections[section].size;
-		offset=manager->dics[0].sections[section].next_off;
-		offset = (offset+ total- size)	% total;
+		offset = manager->dics[0].sections[section].next_off;
+		offset = (offset + total - size) % total;
 	} else {
 
 		size = manager->dics[0].sections[section].last_size;
-		offset=manager->dics[0].sections[section].last_next_off;
-		offset = (offset+ total- size)	% total;
+		offset = manager->dics[0].sections[section].last_next_off;
+		offset = (offset + total - size) % total;
 
 	}
 
 	i = 0;
-	size1 = (size + offset) >= total?(total-offset):size;
+	size1 = (size + offset) >= total ? (total - offset) : size;
 	if (size1 > 0) {
 		fseek(manager->file,
 				offset + (manager->dics[0].sections[section].offset), SEEK_SET);
@@ -510,6 +529,14 @@ static void process_playback(struct record_manager *manager,
 
 }
 
+static void process_flush_data(struct record_manager *manager,
+		struct record * record) {
+
+	flush_serial_data(manager);
+	//flush_wave_data(manager,NULL,0);
+
+}
+
 static void process_record(struct record_manager *manager,
 		struct record * record) {
 
@@ -533,6 +560,9 @@ static void process_record(struct record_manager *manager,
 		break;
 	case (char) RECORD_PLAYBACK: //开始回放数据
 		process_playback(manager, record);
+		break;
+	case (char) RECORD_FLUSH_DATA: //刷数据到磁盘
+		process_flush_data(manager, record);
 		break;
 	default:
 		//printf("record type:%d\n",record->header.type);

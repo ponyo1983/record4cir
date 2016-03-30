@@ -20,6 +20,9 @@
 #include "lib/block_filter.h"
 #include "lib/block_manager.h"
 
+#include "storage/record_manager.h"
+
+
 #include "led/led.h"
 #include "sound/sound.h"
 
@@ -32,15 +35,13 @@ pthread_t thread_control;
 
 const char version[16] = "V2.1.01-16/03/11";
 
-
-
 static void * proc_control(void *args) {
 	struct frame_manager *manager = get_frame_manager(CONTROL_MANAGER);
-
+	struct record_manager * record_manager=get_record_manager();
 	struct block_filter *filter = NULL;
 
 	struct frame *pframe = NULL;
-	struct block * pblock=NULL;
+	struct block * pblock = NULL;
 	char buffer[64];
 	int length;
 	char dest_addr = 0;
@@ -51,36 +52,47 @@ static void * proc_control(void *args) {
 
 	if (manager == NULL)
 		return NULL;
-	filter=get_frame_filter(manager);
+	filter = get_frame_filter(manager);
 	while (1) {
 		pblock = get_block(filter, 2000, BLOCK_FULL);
 		if (pblock != NULL) {
 			light_on(0);
-			pframe=(struct frame*)pblock->data;
-			pframe->length=pblock->data_length;
+			pframe = (struct frame*) pblock->data;
+			pframe->length = pblock->data_length;
 			dest_addr = destination_of_frame(pframe);
 			src_addr = pframe->data[4];
 			cmd = command_of_frame(pframe);
 			operation = operation_of_frame(pframe);
 
-			if((src_addr==MASTER_ADDRESS) && (dest_addr==RADIO_450M_ADDRESS))
-			{
-				if((operation==0x03) && (cmd==0x20)) //向450M发送机车号
-				{
-					char * cab_id=get_id();
-					int i;
-					get_frame_real_data(pframe,buffer,&length);
+			if (src_addr == MASTER_ADDRESS) {
 
-					buffer[8]=0;
-					tmp=buffer[3];
-					buffer[3]=0;
-					int cab_type=atoi(buffer);
+				switch (dest_addr) {
+				case RADIO_450M_ADDRESS:
+					if ((operation == 0x03) && (cmd == 0x20)) { //向450M发送机车号
+						char * cab_id = get_id();
 
-					buffer[3]=tmp;
+						get_frame_real_data(pframe, buffer, &length);
 
-					sprintf(cab_id,"%s-%s",get_cab_code(cab_type),buffer+3);
+						buffer[8] = 0;
+						tmp = buffer[3];
+						buffer[3] = 0;
+						int cab_type = atoi(buffer);
 
+						buffer[3] = tmp;
+
+						sprintf(cab_id, "%s-%s", get_cab_code(cab_type),
+								buffer + 3);
+
+					}
+					break;
+				case ALL_MMI_ADDRESS:
+					if ((operation == 0x03) && (cmd == 0x46)) { //关机命令
+
+						flush_all_data(record_manager);
+					}
+					break;
 				}
+
 			}
 
 			if (dest_addr == RECORD_ADDRESS) {
@@ -99,17 +111,13 @@ static void * proc_control(void *args) {
 
 					switch (cmd) {
 					case (char) 0x33: //播放控制
-						{
-							if(pframe->data[10]==(char)0xff)
-							{
-								start_play(src_addr);
-							}
-							else if(pframe->data[10]==0)
-							{
-								printf("stop play\n");
-								stop_play();
-							}
+					{
+						if (pframe->data[10] == (char) 0xff) {
+							start_play(src_addr);
+						} else if (pframe->data[10] == 0) {
+							stop_play();
 						}
+					}
 						break;
 					case (char) 0xfa: //问询测试
 						break;
@@ -118,7 +126,7 @@ static void * proc_control(void *args) {
 						struct tm time;
 						get_time(&time);
 
-						buffer[0] =to_bcd(time.tm_year - 100) ; //year
+						buffer[0] = to_bcd(time.tm_year - 100); //year
 						buffer[1] = to_bcd(time.tm_mon + 1);
 						buffer[2] = to_bcd(time.tm_mday);
 						buffer[3] = to_bcd(time.tm_hour);
@@ -148,7 +156,7 @@ static void * proc_control(void *args) {
 			}
 			put_block(pblock, BLOCK_EMPTY);
 		} else {
-			//printf("no data\n");
+
 		}
 	}
 

@@ -38,4 +38,6 @@ void request_data(struct record_manager*manager, int section, char *data,
 		int length);
 void store_serial_data(struct record_manager * manager, char *data, int length);
 void store_wave_data(struct record_manager * manager, struct block *pblock);
+void flush_all_data(struct record_manager * manager);
+
 #endif /* STORAGE_MANAGER_H_ */

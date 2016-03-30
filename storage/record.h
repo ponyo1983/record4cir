@@ -19,6 +19,7 @@ enum record_type {
 	RECORD_DUMP_SERIAL=4,//转储串口数据请求
 	RECORD_DUMP_WAVE=5,//转储声音请求
 	RECORD_PLAYBACK=6, //请求回放数据
+	RECORD_FLUSH_DATA=7, //刷回数据
 };
 
 struct record_header
