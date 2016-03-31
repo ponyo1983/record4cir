@@ -66,6 +66,7 @@ static int init_storage(struct record_manager *manager) {
 			bcopy(manager->dics + 1, manager->dics, sizeof(struct record_dic));
 		} else {
 			get_partition_info(&sec_size, &sec_num);
+			if(sec_num>4194304)sec_num=4194304; //最大用到2GB
 			init_record_dic(manager->dics, sec_size, sec_num);
 			init_record_dic(manager->dics + 1, sec_size, sec_num);
 			fseek(file, 0, SEEK_SET);
