@@ -27,7 +27,7 @@
 #include "../led/led.h"
 
 #include "../battery/battery.h"
-
+#include "../state/state.h"
 
 #include "../sound/g726.h"
 
@@ -203,6 +203,7 @@ void store_serial_data(struct record_manager * manager, char *data, int length) 
 		precord->header.second = ptm->tm_sec;
 		precord->header.millsec = milliseconds;
 
+		precord->header.status=get_sys_state();
 		precord->header.battery=(short)get_battery_volt();
 
 		memset(precord->data, 0, RECORD_DATA_SIZE);

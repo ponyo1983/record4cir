@@ -28,6 +28,7 @@ struct led
 
 void init_led();
 void light_on(int no);
+void light_on_always(int no);
 void change_led_mode (enum led_mode mode);
 
 #endif /* LED_H_ */

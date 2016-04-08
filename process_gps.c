@@ -18,6 +18,9 @@
 #include "./serial/frame.h"
 #include "./lib/hwclock.h"
 
+#include "./state/state.h"
+
+
 static pthread_t thread_gps;
 
 static void * proc_gps(void *args) {
@@ -38,8 +41,9 @@ static void * proc_gps(void *args) {
 	filter = get_frame_filter(manager);
 	while (1) {
 
-		pblock = get_block(filter, 5000, BLOCK_FULL);
+		pblock = get_block(filter, TIMEOUT_GPS, BLOCK_FULL);
 		if (pblock != NULL) {
+			set_sys_state(BIT3_GPS,STATE_GPS_OK);
 			light_on(1);
 
 			pframe = (struct frame*) (pblock->data);
@@ -48,6 +52,7 @@ static void * proc_gps(void *args) {
 			gpsSate = pframe->data[12];
 			if (gpsSate == (char) 0x41) { //gps time valid
 
+				set_sys_state(BIT4_GPS_VALID,STATE_GPS_VALID);
 				year = from_bcd(pframe->data[54]);
 				month = from_bcd(pframe->data[55]);
 				day = from_bcd(pframe->data[56]);
@@ -91,13 +96,14 @@ static void * proc_gps(void *args) {
 				}
 
 			} else if (gpsSate == (char) 0x56) {
-
+				set_sys_state(BIT4_GPS_VALID,STATE_GPS_INVALID);
 			}
 
 			put_block(pblock, BLOCK_EMPTY);
 
 		} else { //超时
-
+			set_sys_state(BIT3_GPS,STATE_GPS_FAIL);
+			set_sys_state(BIT4_GPS_VALID,STATE_GPS_INVALID);
 		}
 	}
 	return NULL;

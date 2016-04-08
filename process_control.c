@@ -31,6 +31,7 @@
 
 #include "global.h"
 
+#include "./state/state.h"
 pthread_t thread_control;
 
 const char version[16] = "V2.1.01-16/03/31";
@@ -54,8 +55,9 @@ static void * proc_control(void *args) {
 		return NULL;
 	filter = get_frame_filter(manager);
 	while (1) {
-		pblock = get_block(filter, 2000, BLOCK_FULL);
+		pblock = get_block(filter, TIMEOUT_MAIN_UNIT, BLOCK_FULL);
 		if (pblock != NULL) {
+			set_sys_state(BIT5_MAIN_UNIT,STATE_MAINUNIT_OK);
 			light_on(0);
 			pframe = (struct frame*) pblock->data;
 			pframe->length = pblock->data_length;
@@ -156,7 +158,7 @@ static void * proc_control(void *args) {
 			}
 			put_block(pblock, BLOCK_EMPTY);
 		} else {
-
+			set_sys_state(BIT5_MAIN_UNIT,STATE_MAINUNIT_FAIL);
 		}
 	}
 

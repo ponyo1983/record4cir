@@ -26,6 +26,7 @@
 #include "../config/config.h"
 
 #include "../serial/frame_manager.h"
+#include "../state/state.h"
 
 #include "../global.h"
 
@@ -477,10 +478,12 @@ static void update_state(struct sound * psound) {
 	if (psound->ppt == 1) {
 		if (psound->state != SOUND_PLAY) {
 			psound->state = SOUND_CAPTURE;
+			set_sys_state(BIT1_RECORD,STATE_RECORD_ON);
 		}
 	} else if (psound->ppt == 0) {
 		if (psound->state != SOUND_PLAY) {
 			psound->state = SOUND_IDLE;
+			set_sys_state(BIT1_RECORD,STATE_RECORD_OFF);
 		}
 	}
 }
