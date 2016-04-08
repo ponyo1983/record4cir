@@ -13,6 +13,9 @@
 
 #include <pthread.h>
 
+#include <sys/file.h>
+#include <errno.h>
+
 #include "serial/frame_manager.h"
 #include "serial/frame.h"
 
@@ -42,6 +45,17 @@ int main(int argc, char **argv) {
 			}
 		}
 		return 0;
+	}
+
+	int pid_file = open("/var/run/record4cir.pid", O_CREAT | O_RDWR, 0666);
+	int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+
+	if(rc) {
+	    if(EWOULDBLOCK == errno)
+	        {
+	    		printf("another instance is running!\r");
+	        }
+	    return 0;
 	}
 
 #ifdef __x86_64
