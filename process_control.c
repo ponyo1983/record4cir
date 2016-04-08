@@ -33,7 +33,7 @@
 
 pthread_t thread_control;
 
-const char version[16] = "V2.1.01-16/03/11";
+const char version[16] = "V2.1.01-16/03/31";
 
 static void * proc_control(void *args) {
 	struct frame_manager *manager = get_frame_manager(CONTROL_MANAGER);

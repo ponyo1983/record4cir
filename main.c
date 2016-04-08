@@ -26,7 +26,23 @@ extern void start_serial();
 extern void start_record();
 extern void start_dump();
 
+extern const char const sha1_begin[];
+extern const char const sha1_end[];
+
 int main(int argc, char **argv) {
+
+	int i;
+	if(argc>=2)
+	{
+		for(i=1;i<argc;i++)
+		{
+			if(strcmp(argv[i],"-v")==0)
+			{
+				printf("SHA1:%s\r",sha1_begin);
+			}
+		}
+		return 0;
+	}
 
 #ifdef __x86_64
 
