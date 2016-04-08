@@ -7,8 +7,12 @@
 
 #define AD_NAME	("/sys/devices/platform/at91_adc/chan0")
 
+#define VREF	(3300)
+#define AD_MAX	(1024)
 static int fd_ad=-1;
 static char ad_val[32];
+
+
 
 
 int get_battery_volt()
@@ -28,7 +32,7 @@ int get_battery_volt()
 		if(size>0)
 		{
 			int val=atoi(ad_val);
-			return val;
+			return val*VREF/AD_MAX;
 		}
 	}
 	return -1;
