@@ -32,7 +32,7 @@ struct record_header
 		{
 			unsigned char serial_len;
 			char status;
-			unsigned short lattery;
+			short battery;
 		};
 		int wave_size;
 	};

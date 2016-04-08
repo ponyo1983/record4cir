@@ -26,6 +26,9 @@
 #include "../lib/block_filter.h"
 #include "../led/led.h"
 
+#include "../battery/battery.h"
+
+
 #include "../sound/g726.h"
 
 #define PARTITION_NAME	("/dev/mmcblk0p3")
@@ -199,6 +202,9 @@ void store_serial_data(struct record_manager * manager, char *data, int length) 
 		precord->header.minute = ptm->tm_min;
 		precord->header.second = ptm->tm_sec;
 		precord->header.millsec = milliseconds;
+
+		precord->header.battery=(short)get_battery_volt();
+
 		memset(precord->data, 0, RECORD_DATA_SIZE);
 		bcopy(data, precord->data, length);
 
