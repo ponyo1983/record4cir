@@ -62,6 +62,9 @@ static time_t read_rtc(int utc) {
 	return t;
 }
 
+
+
+
 void get_time(struct tm *ptm) {
 	struct tm *tm;
 	time_t t;
@@ -98,4 +101,23 @@ void set_time2(struct tm* t_tm) {
 	t_timeval.tv_usec = 0;
 
 	int rec = settimeofday(&t_timeval, NULL);
+}
+
+
+void auto_cal()
+{
+	struct tm t_now;
+	get_time(&t_now);
+	int year=t_now.tm_year;
+	if(year+1900<2016 || (year+1900>2036))
+	{
+		t_now.tm_year=2016-1900;
+		t_now.tm_mon=3;
+		t_now.tm_mday=11;
+		t_now.tm_hour=0;
+		t_now.tm_min=0;
+		t_now.tm_sec=0;
+		set_time(&t_now);
+		set_time2(&t_now);
+	}
 }

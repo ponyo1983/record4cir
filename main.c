@@ -32,6 +32,8 @@ extern void start_dump();
 extern const char const sha1_begin[];
 extern const char const sha1_end[];
 
+extern void auto_cal();
+
 int main(int argc, char **argv) {
 
 	int i;
@@ -84,6 +86,8 @@ int main(int argc, char **argv) {
 	}
 	chdir(dirname(argv[0])); //change current dir to application dir
 
+
+	auto_cal();
 	load_config();
 	init_led();
 	start_serial();//开启串口
