@@ -101,8 +101,8 @@ void light_main_alarm(int state) { ////main unit点亮400ms
 
 void light_battery_alarm(int state) {
 	if (state == 0) {
-		if(alarm_led_state==0) return;
-		alarm_led_state = 0;
+		if(alarm_led_state!=MAX_LED_FLASH_VAL) return;
+		alarm_led_state =alarm_led_state&0x07;
 	} else {
 		if(MAX_LED_FLASH_VAL==0) return;
 		alarm_led_state = MAX_LED_FLASH_VAL;
