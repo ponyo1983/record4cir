@@ -9,7 +9,7 @@
 #define STATE_STATE_H_
 
 
-#define TIMEOUT_GPS	(5000)
+#define TIMEOUT_GPS			(5000)
 #define TIMEOUT_MAIN_UNIT	(9000)
 
 #define BATTERY_ALARM_VOLT	(1400)

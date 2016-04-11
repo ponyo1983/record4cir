@@ -21,7 +21,8 @@ struct led
 	int led_no;//编号
 	int fd;
 	int time_out;
-
+	int time_cur;
+	int time_max;
 	struct led *next;
 };
 
@@ -31,4 +32,8 @@ void light_on(int no);
 void light_on_always(int no);
 void change_led_mode (enum led_mode mode);
 
+
+void light_gps_alarm(int state);
+void light_main_alarm(int state);
+void light_battery_alarm(int state);
 #endif /* LED_H_ */

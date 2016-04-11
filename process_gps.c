@@ -45,7 +45,7 @@ static void * proc_gps(void *args) {
 		if (pblock != NULL) {
 			set_sys_state(BIT3_GPS,STATE_GPS_OK);
 			light_on(1);
-
+			light_gps_alarm(0);
 			pframe = (struct frame*) (pblock->data);
 			pframe->length = pblock->data_length;
 
@@ -104,6 +104,7 @@ static void * proc_gps(void *args) {
 		} else { //超时
 			set_sys_state(BIT3_GPS,STATE_GPS_FAIL);
 			set_sys_state(BIT4_GPS_VALID,STATE_GPS_INVALID);
+			light_gps_alarm(1);
 		}
 	}
 	return NULL;

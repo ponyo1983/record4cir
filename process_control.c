@@ -59,6 +59,7 @@ static void * proc_control(void *args) {
 		if (pblock != NULL) {
 			set_sys_state(BIT5_MAIN_UNIT,STATE_MAINUNIT_OK);
 			light_on(0);
+			light_main_alarm(0);
 			pframe = (struct frame*) pblock->data;
 			pframe->length = pblock->data_length;
 			dest_addr = destination_of_frame(pframe);
@@ -159,6 +160,7 @@ static void * proc_control(void *args) {
 			put_block(pblock, BLOCK_EMPTY);
 		} else {
 			set_sys_state(BIT5_MAIN_UNIT,STATE_MAINUNIT_FAIL);
+			light_main_alarm(1);
 		}
 	}
 
