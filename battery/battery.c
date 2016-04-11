@@ -14,7 +14,7 @@
 static int fd_ad = -1;
 static char ad_val[32];
 
-static char alram_on = 0;
+
 
 int get_battery_volt() {
 	int volt = 0;
@@ -32,16 +32,10 @@ int get_battery_volt() {
 			volt = val * VREF / AD_MAX;
 			if (volt < BATTERY_ALARM_VOLT) {
 				set_sys_state(BIT6_BATTERY,STATE_BATTERY_FAIL);
-				if (alram_on == 0) {
-					light_on_always(3);
-					alram_on = 1;
-				}
+				light_battery_alarm(1);
 			} else {
 				set_sys_state(BIT6_BATTERY,STATE_BATTERY_OK);
-				if (alram_on == 1) {
-					light_on(3); //3ms熄灭
-					alram_on = 0;
-				}
+				light_battery_alarm(0);
 			}
 			return volt;
 		}

@@ -42,6 +42,7 @@ static void * proc_gps(void *args) {
 	while (1) {
 
 		pblock = get_block(filter, TIMEOUT_GPS, BLOCK_FULL);
+		get_battery_volt(); // 每次读取电池电压
 		if (pblock != NULL) {
 			set_sys_state(BIT3_GPS,STATE_GPS_OK);
 			light_on(1);
