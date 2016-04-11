@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 	if(rc) {
 	    if(EWOULDBLOCK == errno)
 	        {
-	    		printf("another instance is running!\r");
+	    		printf("another instance is running!\n");
 	        }
 	    return 0;
 	}
@@ -83,8 +83,6 @@ int main(int argc, char **argv) {
 		perror("daemon error\r\n");
 	}
 	chdir(dirname(argv[0])); //change current dir to application dir
-
-	printf("size:%d\n",sizeof(struct record_dic));
 
 	load_config();
 	init_led();
