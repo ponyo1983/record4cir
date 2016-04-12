@@ -245,7 +245,7 @@ static void dump_data(struct dump_manager *manager, int section) {
 	if (mk_dir(buffer) == 0) {
 		struct tm *tNow;
 		tNow=&(manager->time_export);
-		sprintf(buffer1, "%s/%4d-%2d-%2d %2d,%2d,%2d/",buffer, tNow->tm_year+1900, tNow->tm_mon+1, tNow->tm_mday, tNow->tm_hour, tNow->tm_min, tNow->tm_sec);
+		sprintf(buffer1, "%s/%04d-%02d-%02d %02d,%02d,%02d/",buffer, tNow->tm_year+1900, tNow->tm_mon+1, tNow->tm_mday, tNow->tm_hour, tNow->tm_min, tNow->tm_sec);
 		if (mk_dir(buffer1) == 0) {
 
 			switch (section) {
