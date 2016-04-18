@@ -360,6 +360,15 @@ static void flush_data(struct record_manager *manager, int section,
 			+ size) % dic->sections[section].total;
 	dic->sections[section].last_size = dic->sections[section].last_size + size;
 
+	if(dic->sections[section].size>(dic->sections[section].total))
+	{
+		dic->sections[section].size=dic->sections[section].total;
+	}
+
+	if(dic->sections[section].last_size>(dic->sections[section].total))
+	{
+		dic->sections[section].last_size=dic->sections[section].total;
+	}
 	if (section == 1) {
 		manager->serial_length = 0;
 	}
