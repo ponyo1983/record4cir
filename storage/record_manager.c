@@ -327,9 +327,7 @@ static void flush_data(struct record_manager *manager, int section,
 		index += record_size;
 
 	}
-	if (date_changed) {
-		store_date_table(manager, section);
-	}
+	store_date_table(manager, section);
 	if (section == 2) //波形数据，记录最后5条的位置
 			{
 		for (i = 3; i >= 0; i--) {
