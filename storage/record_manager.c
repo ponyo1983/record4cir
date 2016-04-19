@@ -426,7 +426,6 @@ static void dump_data(struct record_manager *manager, struct record * record,
 	static char dump_buffer[DUMP_SIZE]; //
 	int i, j;
 	int size, offset, size1, rd_size;
-	__int64_t total;
 	int size_list[32];
 	int offset_list[32];
 
@@ -440,10 +439,11 @@ static void dump_data(struct record_manager *manager, struct record * record,
 	send_dump(pdump_manager, section * 3, 0, dump_buffer, 16); //应答
 
 	usleep(100000);
-	total = (manager->dics[0].sections[section].total);
+	const __int64_t total = (manager->dics[0].sections[section].total);
 
 	if (pdump_manager->copy_all) { //全拷贝
 		size = manager->dics[0].sections[section].size;
+		if(size>total) size=total;
 		offset = manager->dics[0].sections[section].next_off;
 		offset = (offset + total - size) % total;
 		size_list[0] = size;
@@ -465,6 +465,7 @@ static void dump_data(struct record_manager *manager, struct record * record,
 			if ((cur_date >= pdump_manager->begin_time)
 					&& (cur_date <= pdump_manager->end_time)) {
 				size = manager->date_tbl[section][date_pos / 4 + 1];
+				if(size>total) size=total;
 				offset = manager->date_tbl[section][date_pos / 4 + 2];
 
 
@@ -481,6 +482,7 @@ static void dump_data(struct record_manager *manager, struct record * record,
 
 	} else { //最近拷贝
 		size = manager->dics[0].sections[section].last_size;
+		if(size>total) size=total;
 		offset = manager->dics[0].sections[section].last_next_off;
 		offset = (offset + total - size) % total;
 
